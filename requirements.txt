@@ -1,0 +1,15 @@
+# Biblioteki do pracy z PDF
+fpdf2>=2.7.0
+PyPDF2>=3.0.1
+
+# Gmail API
+simplegmail>=4.1.1
+
+# Dodatkowe zależności (wymagane przez simplegmail)
+google-auth>=2.0.0
+google-auth-oauthlib>=0.5.0
+google-auth-httplib2>=0.1.0
+google-api-python-client>=2.0.0
+
+# Obsługa obrazów (opcjonalne usprawnienia)
+Pillow>=8.0.0
