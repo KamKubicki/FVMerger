@@ -1,31 +1,31 @@
 # FVMerger
 
-Automatyczny system pobierania i przetwarzania faktur z Gmail. Skrypt pobiera faktury z załączników email, konwertuje obrazy na PDF i organizuje pliki do wysłania do księgowej.
+Automated invoice download and processing system for Gmail. The script downloads invoices from email attachments, converts images to PDF, and organizes files for sending to the accountant.
 
-## ✨ Funkcje
+## ✨ Features
 
-- 🗓️ **Konfigurowalne okresy** - poprzedni miesiąc, bieżący miesiąc, cały rok lub własny zakres
-- 📄 **Obsługa PDF i JPG** - automatyczna konwersja zdjęć faktur na PDF
-- 📝 **Inteligentne nazwy plików** - automatyczne nazewnictwo z datą i nadawcą
-- 📊 **Zbiorczy podgląd** - jeden plik PDF do szybkiej kontroli wszystkich faktur
-- 🔍 **Szczegółowe logowanie** - pełna informacja o procesie pobierania
-- ⚙️ **Łatwa konfiguracja** - wszystkie ustawienia w pliku config.py
+- 🗓️ **Configurable periods** - previous month, current month, entire year, or custom range
+- 📄 **PDF and JPG support** - automatic conversion of invoice photos to PDF
+- 📝 **Smart file naming** - automatic naming with date and sender
+- 📊 **Collective preview** - single PDF file for quick review of all invoices
+- 🔍 **Detailed logging** - complete information about the download process
+- ⚙️ **Easy configuration** - all settings in config.py file
 
-## 📋 Wymagania
+## 📋 Requirements
 
 - Python 3.7+
-- Konto Gmail z włączonym API
-- Dostęp do internetu
+- Gmail account with API enabled
+- Internet access
 
-## 🚀 Instalacja
+## 🚀 Installation
 
-### 1. Sklonuj repozytorium
+### 1. Clone repository
 ```bash
-git clone <url-repozytorium>
+git clone <repository-url>
 cd FVMerger
 ```
 
-### 2. Utwórz środowisko wirtualne (zalecane)
+### 2. Create virtual environment (recommended)
 ```bash
 python -m venv venv
 
@@ -36,176 +36,176 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-### 3. Zainstaluj zależności
+### 3. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Konfiguracja Gmail API
+### 4. Gmail API Configuration
 
-#### Krok 1: Włącz Gmail API
-1. Przejdź do [Google Cloud Console](https://console.cloud.google.com/)
-2. Utwórz nowy projekt lub wybierz istniejący
-3. Włącz Gmail API
-4. Przejdź do "Credentials" → "Create Credentials" → "OAuth 2.0 Client IDs"
-5. Wybierz "Desktop application"
-6. Pobierz plik JSON i zapisz jako `client_secret.json` w katalogu projektu
+#### Step 1: Enable Gmail API
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable Gmail API
+4. Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client IDs"
+5. Select "Desktop application"
+6. Download JSON file and save as `client_secret.json` in project directory
 
-#### Krok 2: Pierwsze uruchomienie
+#### Step 2: First run
 ```bash
 python main.py
 ```
-Przy pierwszym uruchomieniu zostaniesz przekierowany do przeglądarki w celu autoryzacji dostępu do Gmail.
+On first run, you'll be redirected to browser for Gmail access authorization.
 
-## 📖 Użytkowanie
+## 📖 Usage
 
-### Podstawowe komendy
+### Basic commands
 
 ```bash
-# Domyślnie - poprzedni miesiąc (idealne do wysyłania do 10. każdego miesiąca)
+# Default - previous month (perfect for sending to accountant by 10th of each month)
 python main.py
 
-# Bieżący miesiąc
+# Current month
 python main.py --period current_month
 
-# Cały rok
+# Entire year
 python main.py --period year
 
-# Własny zakres dat
+# Custom date range
 python main.py --period custom --from 2025/01/01 --to 2025/03/31
 
-# Pomoc
+# Help
 python main.py --help
 ```
 
-### Dostępne okresy
+### Available periods
 
-| Okres | Opis | Przykład użycia |
-|-------|------|-----------------|
-| `last_month` | Poprzedni miesiąc (domyślny) | Wysyłanie faktur do księgowej |
-| `current_month` | Bieżący miesiąc | Sprawdzenie faktur w trakcie miesiąca |
-| `year` | Cały rok | Roczne zestawienie |
-| `custom` | Własny zakres | Konkretny okres rozliczeniowy |
+| Period | Description | Example usage |
+|--------|-------------|---------------|
+| `last_month` | Previous month (default) | Sending invoices to accountant |
+| `current_month` | Current month | Checking invoices during the month |
+| `year` | Entire year | Annual summary |
+| `custom` | Custom range | Specific billing period |
 
-## ⚙️ Konfiguracja
+## ⚙️ Configuration
 
-Edytuj plik `config.py` aby dostosować ustawienia:
+Edit `config.py` file to customize settings:
 
 ```python
-# Domyślny okres pobierania
+# Default download period
 DEFAULT_PERIOD = "last_month"
 
-# Katalogi
+# Directories
 TEMP_DIR = "attachments"
 JPG_TEMP = "jpg_temp"
 
 # Gmail
 CLIENT_SECRET_FILE = "client_secret.json"
 
-# Filtry wiadomości
+# Message filters
 EMAIL_FILTER = "-is:starred"
 ```
 
-## 📁 Struktura plików
+## 📁 File structure
 
 ```
 FVMerger/
-├── main.py              # Główny skrypt
-├── config.py            # Konfiguracja
-├── requirements.txt     # Zależności Python
-├── README.md           # Ta dokumentacja
-├── client_secret.json  # Klucze Gmail API (musisz dodać)
-├── attachments/        # Pobrane faktury (osobne pliki)
-│   ├── 2025-07-15_orlen_Faktura_F_1498K19.pdf
-│   └── 2025-08-12_siemens_wyciag_faktura.pdf
-├── jpg_temp/          # Pliki tymczasowe (automatycznie czyszczone)
-└── attachments.pdf    # Zbiorczy PDF do podglądu
+├── main.py              # Main script
+├── config.py            # Configuration
+├── requirements.txt     # Python dependencies
+├── README.md           # This documentation
+├── client_secret.json  # Gmail API keys (you must add)
+├── attachments/        # Downloaded invoices (separate files)
+│   ├── 2025-07-15_orlen_Invoice_F_1498K19.pdf
+│   └── 2025-08-12_siemens_statement_invoice.pdf
+├── jpg_temp/          # Temporary files (automatically cleaned)
+└── attachments.pdf    # Collective PDF for preview
 ```
 
-## 📋 Przykłady użycia
+## 📋 Usage examples
 
-### Miesięczna rutyna księgowej
+### Monthly accountant routine
 ```bash
-# Na początku miesiąca pobierz faktury z poprzedniego miesiąca
+# At the beginning of the month, download invoices from previous month
 python main.py
 
-# Sprawdź zbiorczy plik
+# Check collective file
 # → attachments.pdf
 
-# Wyślij osobne pliki z katalogu attachments/ do księgowej
+# Send separate files from attachments/ directory to accountant
 ```
 
-### Sprawdzenie faktur w trakcie miesiąca
+### Check invoices during the month
 ```bash
 python main.py --period current_month
 ```
 
-### Roczne zestawienie
+### Annual summary
 ```bash
 python main.py --period year
 ```
 
-### Konkretny okres (np. kwartał)
+### Specific period (e.g., quarter)
 ```bash
 python main.py --period custom --from 2025/01/01 --to 2025/03/31
 ```
 
-## 🔧 Rozwiązywanie problemów
+## 🔧 Troubleshooting
 
-### Problemy z autoryzacją Gmail
+### Gmail authorization issues
 ```bash
-# Usuń stary token i autoryzuj ponownie
+# Remove old token and authorize again
 rm gmail_token.json
 python main.py
 ```
 
-### Błąd "No module named..."
+### "No module named..." error
 ```bash
-# Sprawdź czy środowisko wirtualne jest aktywne
+# Check if virtual environment is active
 pip install -r requirements.txt
 ```
 
-### Nie znaleziono faktur
-- Sprawdź czy email zawiera załączniki PDF/JPG
-- Sprawdź filtry w config.py (EMAIL_FILTER)
-- Sprawdź zakres dat
+### No invoices found
+- Check if email contains PDF/JPG attachments
+- Check filters in config.py (EMAIL_FILTER)
+- Check date range
 
-### Problemy z konwersją JPG
-- Upewnij się że pliki JPG nie są uszkodzone
-- Sprawdź czy masz wystarczająco miejsca na dysku
+### JPG conversion issues
+- Make sure JPG files are not corrupted
+- Check if you have enough disk space
 
-## 📊 Przykładowy output
+## 📊 Example output
 
 ```
-2025-08-15 23:12:19,716 - INFO - Okres: last_month
-2025-08-15 23:12:19,716 - INFO - Szukam wiadomości od: 2025/07/01 do: 2025/08/01
-2025-08-15 23:12:19,716 - INFO - Znaleziono 4 wiadomości
-2025-08-15 23:12:19,716 - INFO - Przetwarzam wiadomość 1 od ORLEN PAY <orlenpay@orlen.pl>
-2025-08-15 23:12:19,716 - INFO - Zapisano PDF: 2025-07-15_orlenpay_Faktura_F_1920K19.pdf
+2025-08-15 23:12:19,716 - INFO - Period: last_month
+2025-08-15 23:12:19,716 - INFO - Searching messages from: 2025/07/01 to: 2025/08/01
+2025-08-15 23:12:19,716 - INFO - Found 4 messages
+2025-08-15 23:12:19,716 - INFO - Processing message 1 from ORLEN PAY <orlenpay@orlen.pl>
+2025-08-15 23:12:19,716 - INFO - Saved PDF: 2025-07-15_orlenpay_Invoice_F_1920K19.pdf
 ...
 
-Witam, w załączniku przesyłam następujące dokumenty:
+Hello, I'm sending the following documents in the attachment:
 
-	1. 2025-07-15_orlenpay_Faktura_F_1920K19_0980_25_Orlen_Pay.pdf
-	2. 2025-08-12_siemens_2025-08-12_FAKTURY_01849_08_25_SLMLO_256131.pdf
+	1. 2025-07-15_orlenpay_Invoice_F_1920K19_0980_25_Orlen_Pay.pdf
+	2. 2025-08-12_siemens_2025-08-12_INVOICES_01849_08_25_SLMLO_256131.pdf
 
-Pozdrawiam
+Best regards
 Kamil Kubicki
 
---- PODSUMOWANIE ---
-Okres: last_month (2025/07/01 - 2025/08/01)
-Znalezionych plików: 2
-Pliki znajdują się w katalogu: attachments/
-Zbiorczy PDF (do podglądu): attachments.pdf
+--- SUMMARY ---
+Period: last_month (2025/07/01 - 2025/08/01)
+Files found: 2
+Files are located in directory: attachments/
+Collective PDF (for preview): attachments.pdf
 ```
 
-## 🤝 Wsparcie
+## 🤝 Support
 
-W razie problemów:
-1. Sprawdź sekcję "Rozwiązywanie problemów"
-2. Uruchom z `--help` aby zobaczyć wszystkie opcje
-3. Sprawdź logi w konsoli
+In case of problems:
+1. Check "Troubleshooting" section
+2. Run with `--help` to see all options
+3. Check logs in console
 
-## 📄 Licencja
+## 📄 License
 
-Projekt na użytek własny.
+Project for personal use.

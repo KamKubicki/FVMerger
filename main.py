@@ -9,27 +9,30 @@ from PyPDF2 import PdfMerger
 from simplegmail.query import construct_query
 import config
 
-# Konfiguracja logowania
+# Logging configuration
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+# Constants
+DATE_FORMAT = "%Y/%m/%d"
+
 def parse_arguments():
-    """Parsuj argumenty wiersza poleceń"""
-    parser = argparse.ArgumentParser(description='FVMerger - pobieranie faktur z Gmail')
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(description='FVMerger - download invoices from Gmail')
     parser.add_argument('--period', choices=['last_month', 'current_month', 'year', 'custom'], 
                        default=config.DEFAULT_PERIOD,
-                       help='Okres pobierania faktur (domyślnie: last_month)')
+                       help='Download period (default: last_month)')
     parser.add_argument('--from', dest='date_from', type=str,
-                       help='Data początkowa (YYYY/MM/DD) - używane z --period custom')
+                       help='Start date (YYYY/MM/DD) - used with --period custom')
     parser.add_argument('--to', dest='date_to', type=str,
-                       help='Data końcowa (YYYY/MM/DD) - używane z --period custom')
+                       help='End date (YYYY/MM/DD) - used with --period custom')
     return parser.parse_args()
 
 def get_date_range(period, date_from=None, date_to=None):
-    """Zwraca zakres dat na podstawie wybranego okresu"""
+    """Returns date range based on selected period"""
     now = datetime.datetime.now()
     
     if period == 'last_month':
-        # Poprzedni miesiąc
+        # Previous month
         if now.month == 1:
             start_date = datetime.datetime(now.year - 1, 12, 1)
         else:
@@ -37,75 +40,75 @@ def get_date_range(period, date_from=None, date_to=None):
         end_date = datetime.datetime(now.year, now.month, 1)
         
     elif period == 'current_month':
-        # Bieżący miesiąc
+        # Current month
         start_date = now.replace(day=1)
         end_date = now
         
     elif period == 'year':
-        # Cały rok
+        # Entire year
         start_date = datetime.datetime(now.year, 1, 1)
         end_date = now
         
     elif period == 'custom':
-        # Custom zakres
+        # Custom range
         if not date_from or not date_to:
-            # Użyj dat z config.py jeśli nie podano argumentów
+            # Use dates from config.py if no arguments provided
             date_from = config.CUSTOM_FROM
             date_to = config.CUSTOM_TO
         
         try:
-            start_date = datetime.datetime.strptime(date_from, "%Y/%m/%d")
-            end_date = datetime.datetime.strptime(date_to, "%Y/%m/%d")
+            start_date = datetime.datetime.strptime(date_from, DATE_FORMAT)
+            end_date = datetime.datetime.strptime(date_to, DATE_FORMAT)
         except ValueError:
-            logging.error(f"Nieprawidłowy format daty. Użyj YYYY/MM/DD")
+            logging.error("Invalid date format. Use YYYY/MM/DD")
             raise
     
     return start_date, end_date
 
-# Parsuj argumenty
+# Parse arguments
 args = parse_arguments()
 
-# Utwórz obiekt Gmail i zaloguj się
+# Create Gmail object and authenticate
 gmail = Gmail(config.CLIENT_SECRET_FILE)
 
-# Utwórz ścieżkę do katalogu tymczasowego dla załączników
+# Create path to temporary directory for attachments
 temp_dir = config.TEMP_DIR
 jpg_temp = config.JPG_TEMP
 os.makedirs(temp_dir, exist_ok=True)
 os.makedirs(jpg_temp, exist_ok=True)
 
-# Pobierz zakres dat na podstawie argumentów
+# Get date range based on arguments
 start_date, end_date = get_date_range(args.period, args.date_from, args.date_to)
 
-# Przygotuj query dla Gmail
+# Prepare Gmail query
 query_params_1 = {
-    "after": start_date.strftime("%Y/%m/%d"),
-    "before": end_date.strftime("%Y/%m/%d"),
+    "after": start_date.strftime(DATE_FORMAT),
+    "before": end_date.strftime(DATE_FORMAT),
     "exact_phrase": config.EMAIL_FILTER
 }
 
-logging.info(f"Okres: {args.period}")
-logging.info(f"Szukam wiadomości od: {start_date.strftime('%Y/%m/%d')} do: {end_date.strftime('%Y/%m/%d')}")
+logging.info(f"Period: {args.period}")
+logging.info(f"Searching messages from: {start_date.strftime(DATE_FORMAT)} to: {end_date.strftime(DATE_FORMAT)}")
 
 messages = gmail.get_messages(query=construct_query(query_params_1))
 
-# Przygotuj listę plików załączników
+# Prepare list of attachment files
 attachments = []
 
 def sanitize_filename(filename):
-    """Czyści nazwę pliku z niepożądanych znaków"""
+    """Cleans filename from unwanted characters"""
     return filename.replace('/', '_').replace('\\', '_').replace(':', '_')
 
 def get_better_filename(original_name, message_date, sender):
-    """Tworzy lepszą nazwę pliku z datą i nadawcą"""
+    """Creates better filename with date and sender"""
     if message_date:
         try:
             if isinstance(message_date, str):
-                # Jeśli to string, użyj obecnej daty
+                # If it's a string, use current date
                 date_str = datetime.datetime.now().strftime("%Y-%m-%d")
             else:
                 date_str = message_date.strftime("%Y-%m-%d")
-        except:
+        except (AttributeError, TypeError):
             date_str = datetime.datetime.now().strftime("%Y-%m-%d")
     else:
         date_str = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -116,14 +119,14 @@ def get_better_filename(original_name, message_date, sender):
     name, ext = os.path.splitext(original_name)
     return f"{date_str}_{sender_clean}_{sanitize_filename(name)}{ext}"
 
-# Przejdź przez każdą wiadomość
-logging.info(f"Znaleziono {len(messages)} wiadomości")
+# Process each message
+logging.info(f"Found {len(messages)} messages")
 for i, message in enumerate(messages, 1):
     if message.attachments:
         sender = message.sender if hasattr(message, 'sender') else 'unknown'
         msg_date = message.date if hasattr(message, 'date') else None
         
-        logging.info(f"Przetwarzam wiadomość {i} od {sender}")
+        logging.info(f"Processing message {i} from {sender}")
         
         for attachment in message.attachments:
             try:
@@ -132,7 +135,7 @@ for i, message in enumerate(messages, 1):
                     file_path = os.path.join(temp_dir, better_name)
                     attachment.save(file_path, overwrite=True)
                     attachments.append(file_path)
-                    logging.info(f"Zapisano PDF: {better_name}")
+                    logging.info(f"Saved PDF: {better_name}")
                     
                 elif attachment.filetype == 'image/jpeg' or attachment.filename.lower().endswith(('.jpg', '.jpeg')):
                     pdf = FPDF()
@@ -146,12 +149,12 @@ for i, message in enumerate(messages, 1):
                     pdf_path = os.path.join(temp_dir, better_name)
                     pdf.output(pdf_path)
                     attachments.append(pdf_path)
-                    logging.info(f"Konwertowano JPG na PDF: {better_name}")
+                    logging.info(f"Converted JPG to PDF: {better_name}")
                     
-            except Exception as e:
-                logging.error(f"Błąd przy przetwarzaniu załącznika {attachment.filename}: {e}")
+            except (OSError, IOError, ValueError) as e:
+                logging.error(f"Error processing attachment {attachment.filename}: {e}")
 
-# Generuj zbiorczy plik PDF (do podglądu)
+# Generate collective PDF file (for preview)
 if attachments:
     try:
         merger = PdfMerger()
@@ -161,33 +164,33 @@ if attachments:
         pdf_file = 'attachments.pdf'
         merger.write(pdf_file)
         merger.close()
-        logging.info(f"Utworzono zbiorczy plik: {pdf_file}")
-    except Exception as e:
-        logging.error(f"Błąd przy tworzeniu zbiorcza PDF: {e}")
+        logging.info(f"Created collective file: {pdf_file}")
+    except (OSError, IOError) as e:
+        logging.error(f"Error creating collective PDF: {e}")
     
-    # Wyczyść pliki tymczasowe JPG
+    # Clean temporary JPG files
     try:
         if os.path.exists(jpg_temp):
             shutil.rmtree(jpg_temp)
             os.makedirs(jpg_temp, exist_ok=True)
-    except Exception as e:
-        logging.warning(f"Nie udało się wyczyścić {jpg_temp}: {e}")
+    except (OSError, IOError) as e:
+        logging.warning(f"Failed to clean {jpg_temp}: {e}")
 
-# Wygeneruj tekst do wysłania ksiegowej
-print(f'Witam, w załączniku przesyłam następujące dokumenty:')
+# Generate text for sending to accountant
+print("Hello, I\'m sending the following documents in the attachment:")
 print()
 for i, att in enumerate(attachments, start=1):
     filename = os.path.basename(att)
     print(f"\t{i}. {filename}")
 print('')
-print(f'Pozdrawiam')
-print(f'Kamil Kubicki')
+print('Best regards')
+print('Kamil Kubicki')
 print()
-print(f"--- PODSUMOWANIE ---")
-print(f"Okres: {args.period} ({start_date.strftime('%Y/%m/%d')} - {end_date.strftime('%Y/%m/%d')})")
-print(f"Znalezionych plików: {len(attachments)}")
-print(f"Pliki znajdują się w katalogu: {temp_dir}/")
+print("--- SUMMARY ---")
+print(f"Period: {args.period} ({start_date.strftime(DATE_FORMAT)} - {end_date.strftime(DATE_FORMAT)})")
+print(f"Files found: {len(attachments)}")
+print(f"Files are located in directory: {temp_dir}/")
 if attachments:
-    print(f"Zbiorczy PDF (do podglądu): attachments.pdf")
+    print("Collective PDF (for preview): attachments.pdf")
 else:
-    print("Nie znaleziono żadnych załączników w podanym okresie.")
+    print("No attachments found in the specified period.")
